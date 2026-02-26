@@ -1,0 +1,1 @@
+# plugin_activity_moodle
