@@ -157,15 +157,25 @@ class security_service {
      * @return bool True if IP is in range.
      */
     protected function ipv6_in_cidr(string $ip, string $subnet, int $mask): bool {
-        $ipbin = inet_pton($ip);
-        $subnetbin = inet_pton($subnet);
+        $ipbin = @inet_pton($ip);
+        $subnetbin = @inet_pton($subnet);
 
         if ($ipbin === false || $subnetbin === false) {
             return false;
         }
 
-        $maskbin = str_repeat('1', $mask) . str_repeat('0', 128 - $mask);
-        $maskbin = pack('H*', base_convert($maskbin, 2, 16));
+        // Create a binary mask string (128 bits for IPv6).
+        $maskbin = '';
+        for ($i = 0; $i < 16; $i++) {
+            $bitsremaining = $mask - ($i * 8);
+            if ($bitsremaining >= 8) {
+                $maskbin .= chr(255);
+            } else if ($bitsremaining > 0) {
+                $maskbin .= chr(256 - pow(2, 8 - $bitsremaining));
+            } else {
+                $maskbin .= chr(0);
+            }
+        }
 
         return ($ipbin & $maskbin) === ($subnetbin & $maskbin);
     }

@@ -61,12 +61,12 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
-    // Max payload size.
+    // Max payload size (default 5MB).
     $settings->add(new admin_setting_configtext(
         'local_json2activity/max_payload_bytes',
         get_string('setting_max_payload_bytes', 'local_json2activity'),
         get_string('setting_max_payload_bytes_desc', 'local_json2activity'),
-        5242880, // 5MB.
+        5 * 1024 * 1024,
         PARAM_INT
     ));
 

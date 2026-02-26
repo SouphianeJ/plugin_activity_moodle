@@ -115,7 +115,7 @@ if ($requestid) {
 
     // Show error summary.
     if ($request->errsummary) {
-        echo html_writer::tag('h6', 'Error Summary');
+        echo html_writer::tag('h6', get_string('errsummary', 'local_json2activity'));
         echo html_writer::tag('div', htmlspecialchars($request->errsummary), ['class' => 'alert alert-danger']);
     }
 
@@ -128,7 +128,15 @@ if ($requestid) {
         echo html_writer::tag('h5', get_string('itemdetails', 'local_json2activity'));
 
         $table = new html_table();
-        $table->head = ['#', 'Item ID', 'Type', 'Section', 'Status', 'CMID', 'Error'];
+        $table->head = [
+            '#',
+            get_string('itemid', 'local_json2activity'),
+            get_string('type', 'local_json2activity'),
+            get_string('section', 'local_json2activity'),
+            get_string('status', 'local_json2activity'),
+            get_string('cmid', 'local_json2activity'),
+            get_string('error', 'local_json2activity'),
+        ];
         $table->attributes['class'] = 'table table-sm table-striped';
 
         foreach ($items as $item) {

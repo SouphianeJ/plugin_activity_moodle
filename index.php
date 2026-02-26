@@ -65,7 +65,7 @@ if ($mform->is_cancelled()) {
             redirect(new moodle_url('/course/view.php', ['id' => $courseid]), '', 0);
         }
     } catch (\Throwable $e) {
-        \core\notification::error('Erreur: ' . $e->getMessage());
+        \core\notification::error(get_string('error', 'moodle') . ': ' . $e->getMessage());
     }
 }
 

@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 // Plugin name and general.
 $string['pluginname'] = 'JSON2Activity';
-$string['privacy:metadata'] = 'The JSON2Activity plugin stores request logs with user-submitted data for debugging purposes.';
+$string['privacy:metadata'] = 'The JSON2Activity plugin stores request logs in the local_json2activity_req and local_json2activity_item tables. These logs contain: user ID of the user who made the request (via WS token), remote IP address, request timestamp, JSON payloads (which may contain user-submitted HTML content), and processing results. This data is retained for debugging and audit purposes based on the configured retention period.';
 
 // Form strings.
 $string['jsonpayload'] = 'JSON Payload';
@@ -159,3 +159,11 @@ $string['activitytype_forum'] = 'Forum';
 // Success messages.
 $string['activities_created'] = '{$a} activity(ies) created successfully.';
 $string['dry_run_completed'] = 'Dry run completed. {$a} items validated.';
+
+// Additional strings for logs.php table headers.
+$string['errsummary'] = 'Error Summary';
+$string['itemid'] = 'Item ID';
+$string['type'] = 'Type';
+$string['section'] = 'Section';
+$string['cmid'] = 'CMID';
+$string['error'] = 'Error';

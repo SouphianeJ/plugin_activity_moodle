@@ -131,12 +131,24 @@ if ($action === 'edit' || $action === 'add') {
     echo html_writer::tag('button', get_string('generatesecret', 'local_json2activity'), [
         'type' => 'button',
         'class' => 'btn btn-outline-secondary',
-        'onclick' => "document.getElementById('sharedsecret').value = '" . bin2hex(random_bytes(32)) . "';",
+        'id' => 'generatesecret-btn',
     ]);
     echo html_writer::end_div();
     echo html_writer::end_div();
     echo html_writer::end_div();
     echo html_writer::end_div();
+
+    // JavaScript to generate random secret on button click.
+    echo html_writer::script("
+        document.getElementById('generatesecret-btn').addEventListener('click', function() {
+            var array = new Uint8Array(32);
+            window.crypto.getRandomValues(array);
+            var hex = Array.from(array, function(byte) {
+                return ('0' + byte.toString(16)).slice(-2);
+            }).join('');
+            document.getElementById('sharedsecret').value = hex;
+        });
+    ");
 
     echo html_writer::start_div('form-group row');
     echo html_writer::tag('label', get_string('allowedipranges', 'local_json2activity'), [
@@ -242,7 +254,7 @@ if (!$clients) {
             get_string('delete'),
             [
                 'class' => 'btn btn-sm btn-danger',
-                'onclick' => "return confirm('Are you sure?');",
+                'onclick' => "return confirm('" . get_string('areyousure', 'moodle') . "');",
             ]
         );
 
