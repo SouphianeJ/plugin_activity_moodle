@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/json2activity/db" VERSION="20250226" COMMENT="XMLDB file for plugin local_json2activity">
+  <TABLES>
+    <TABLE NAME="local_json2activity_req" COMMENT="Log requests received from external apps">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="requestid" TYPE="char" LENGTH="64" NOTNULL="true" COMMENT="UUID v4 unique request identifier"/>
+        <FIELD NAME="clientid" TYPE="char" LENGTH="64" NOTNULL="false" COMMENT="Client identifier"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Target course ID"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User linked to WS token"/>
+        <FIELD NAME="remoteip" TYPE="char" LENGTH="45" NOTNULL="false" COMMENT="Remote IP address"/>
+        <FIELD NAME="receivedat" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Timestamp when request was received"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="accepted" COMMENT="Request status: accepted|queued|processing|success|partial|failed|rejected"/>
+        <FIELD NAME="mode" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="partial" COMMENT="Processing mode: partial|atomic"/>
+        <FIELD NAME="dryrun" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Dry run mode"/>
+        <FIELD NAME="itemcount" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Total items in request"/>
+        <FIELD NAME="createdcount" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Successfully created items"/>
+        <FIELD NAME="failedcount" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Failed items"/>
+        <FIELD NAME="payloadhash" TYPE="char" LENGTH="64" NOTNULL="false" COMMENT="SHA256 hash of payload"/>
+        <FIELD NAME="payloadjson" TYPE="text" NOTNULL="false" COMMENT="Full JSON payload (compressed if enabled)"/>
+        <FIELD NAME="responsejson" TYPE="text" NOTNULL="false" COMMENT="Full JSON response"/>
+        <FIELD NAME="sigvalid" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Signature validation result"/>
+        <FIELD NAME="replayrejected" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Request was rejected as replay"/>
+        <FIELD NAME="errsummary" TYPE="text" NOTNULL="false" COMMENT="Brief error summary"/>
+        <FIELD NAME="durationms" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Processing duration in milliseconds"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ix_requestid" UNIQUE="true" FIELDS="requestid"/>
+        <INDEX NAME="ix_clientid" UNIQUE="false" FIELDS="clientid"/>
+        <INDEX NAME="ix_courseid" UNIQUE="false" FIELDS="courseid"/>
+        <INDEX NAME="ix_receivedat" UNIQUE="false" FIELDS="receivedat"/>
+        <INDEX NAME="ix_status" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_json2activity_item" COMMENT="Log items processed per request">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="reqid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="FK to local_json2activity_req"/>
+        <FIELD NAME="itemindex" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Index in items array"/>
+        <FIELD NAME="itemid" TYPE="char" LENGTH="64" NOTNULL="false" COMMENT="Client provided item ID"/>
+        <FIELD NAME="sectionnum" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Target section number"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="32" NOTNULL="true" COMMENT="Activity type"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" COMMENT="Item status: created|skipped|failed|validated"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Created course module ID"/>
+        <FIELD NAME="instanceid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Created instance ID"/>
+        <FIELD NAME="errorcode" TYPE="char" LENGTH="64" NOTNULL="false" COMMENT="Error code if failed"/>
+        <FIELD NAME="errormessage" TYPE="text" NOTNULL="false" COMMENT="Error message if failed"/>
+        <FIELD NAME="debuginfo" TYPE="text" NOTNULL="false" COMMENT="Debug info or stacktrace"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_reqid" TYPE="foreign" FIELDS="reqid" REFTABLE="local_json2activity_req" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ix_reqid" UNIQUE="false" FIELDS="reqid"/>
+        <INDEX NAME="ix_itemid" UNIQUE="false" FIELDS="itemid"/>
+        <INDEX NAME="ix_status" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_json2activity_client" COMMENT="Registered API clients">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="clientid" TYPE="char" LENGTH="64" NOTNULL="true" COMMENT="Client identifier"/>
+        <FIELD NAME="sharedsecret" TYPE="char" LENGTH="128" NOTNULL="true" COMMENT="Shared secret for HMAC"/>
+        <FIELD NAME="allowedipranges" TYPE="text" NOTNULL="false" COMMENT="CIDR list of allowed IPs"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Client enabled"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ix_clientid" UNIQUE="true" FIELDS="clientid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_json2activity_nonce" COMMENT="Used nonces for anti-replay">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="clientid" TYPE="char" LENGTH="64" NOTNULL="true"/>
+        <FIELD NAME="nonce" TYPE="char" LENGTH="64" NOTNULL="true"/>
+        <FIELD NAME="expiresat" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ix_clientid_nonce" UNIQUE="true" FIELDS="clientid, nonce"/>
+        <INDEX NAME="ix_expiresat" UNIQUE="false" FIELDS="expiresat"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

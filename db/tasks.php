@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for local_json2activity.
+ * Scheduled tasks for local_json2activity.
  *
  * @package    local_json2activity
  * @copyright  2025 JSON2Activity
@@ -24,8 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_json2activity';
-$plugin->version = 2025022600;
-$plugin->requires = 2022041900; // Moodle 4.0.
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '2.0.0';
+$tasks = [
+    [
+        'classname' => 'local_json2activity\task\cleanup_task',
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => '3',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+];

@@ -15,17 +15,39 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for local_json2activity.
+ * Import form for local_json2activity.
  *
  * @package    local_json2activity
  * @copyright  2025 JSON2Activity
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_json2activity\form;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_json2activity';
-$plugin->version = 2025022600;
-$plugin->requires = 2022041900; // Moodle 4.0.
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '2.0.0';
+global $CFG;
+require_once($CFG->libdir . '/formslib.php');
+
+/**
+ * Form for importing JSON payload.
+ */
+class importform extends \moodleform {
+
+    /**
+     * Define the form elements.
+     */
+    public function definition() {
+        $mform = $this->_form;
+        $courseid = $this->_customdata['courseid'];
+
+        $mform->addElement('hidden', 'courseid', $courseid);
+        $mform->setType('courseid', PARAM_INT);
+
+        $mform->addElement('textarea', 'json', get_string('jsonpayload', 'local_json2activity'), 'rows="16" cols="100"');
+        $mform->setType('json', PARAM_RAW);
+        $mform->addRule('json', null, 'required', null, 'client');
+
+        $this->add_action_buttons(true, get_string('createactivity', 'local_json2activity'));
+    }
+}

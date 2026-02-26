@@ -15,17 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for local_json2activity.
+ * Privacy provider for local_json2activity.
  *
  * @package    local_json2activity
  * @copyright  2025 JSON2Activity
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_json2activity\privacy;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_json2activity';
-$plugin->version = 2025022600;
-$plugin->requires = 2022041900; // Moodle 4.0.
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '2.0.0';
+/**
+ * Privacy provider class.
+ */
+class provider implements \core_privacy\local\metadata\null_provider {
+
+    /**
+     * Get the reason for null provider.
+     *
+     * @return string
+     */
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}
