@@ -180,7 +180,7 @@ signature = base64(hmac_sha256(client_secret, canonical_string))
 
 ### Status endpoint
 
-`GET /webservice/rest/server.php?wsfunction=local_json2activity_get_status`
+`POST /webservice/rest/server.php?wsfunction=local_json2activity_get_status`
 
 #### Parameters
 
@@ -188,6 +188,10 @@ signature = base64(hmac_sha256(client_secret, canonical_string))
 - `moodlewsrestformat`: json
 - `requestid`: Request UUID to look up
 - `courseid`: Course ID (optional, for ownership validation)
+- `clientid` (optional, accepted for signed caller compatibility)
+- `timestamp` (optional, accepted for signed caller compatibility)
+- `nonce` (optional, accepted for signed caller compatibility)
+- `signature` (optional, accepted for signed caller compatibility)
 
 ## Configuration
 

@@ -49,6 +49,11 @@ class get_status extends external_api {
             'requestid' => new external_value(PARAM_ALPHANUMEXT, 'Request ID (UUID v4)'),
             'courseid' => new external_value(PARAM_INT, 'Course ID (optional, for extra validation)',
                 VALUE_DEFAULT, 0),
+            // Optional fields accepted for client compatibility with signed callers.
+            'clientid' => new external_value(PARAM_ALPHANUMEXT, 'Client ID (optional)', VALUE_DEFAULT, ''),
+            'timestamp' => new external_value(PARAM_INT, 'Request timestamp (optional)', VALUE_DEFAULT, 0),
+            'nonce' => new external_value(PARAM_ALPHANUMEXT, 'Nonce (optional)', VALUE_DEFAULT, ''),
+            'signature' => new external_value(PARAM_RAW, 'HMAC signature (optional)', VALUE_DEFAULT, ''),
         ]);
     }
 
@@ -59,16 +64,23 @@ class get_status extends external_api {
      * @param int $courseid Optional course ID to validate ownership.
      * @return array The canonical nested response.
      */
-    public static function execute(string $requestid, int $courseid = 0): array {
+    public static function execute(string $requestid, int $courseid = 0, string $clientid = '',
+            int $timestamp = 0, string $nonce = '', string $signature = ''): array {
         global $DB, $CFG;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'requestid' => $requestid,
             'courseid' => $courseid,
+            'clientid' => $clientid,
+            'timestamp' => $timestamp,
+            'nonce' => $nonce,
+            'signature' => $signature,
         ]);
 
         $requestid = $params['requestid'];
         $courseid = $params['courseid'];
+        // Optional security fields are accepted for compatibility with signed callers.
+        // Status lookup remains read-only and does not require these fields today.
 
         // Build query conditions.
         $conditions = ['requestid' => $requestid];
@@ -136,6 +148,7 @@ class get_status extends external_api {
     protected static function map_status(string $status, bool $dryrun): string {
         if ($dryrun) {
             $map = [
+                'validated' => 'success',
                 'success'  => 'success',
                 'partial'  => 'partial_success',
                 'failed'   => 'failed',
@@ -147,6 +160,7 @@ class get_status extends external_api {
             ];
         } else {
             $map = [
+                'validated' => 'success',
                 'partial' => 'partial_success',
             ];
         }
