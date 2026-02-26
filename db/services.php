@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for local_json2activity.
+ * Web service definitions for local_json2activity.
  *
  * @package    local_json2activity
  * @copyright  2025 JSON2Activity
@@ -24,8 +24,25 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_json2activity';
-$plugin->version = 2025022600;
-$plugin->requires = 2022041900; // Moodle 4.0.
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '2.0.0';
+$functions = [
+    'local_json2activity_process' => [
+        'classname'     => 'local_json2activity\external\process',
+        'methodname'    => 'execute',
+        'description'   => 'Process a JSON payload to create activities in a Moodle course.',
+        'type'          => 'write',
+        'ajax'          => false,
+        'capabilities'  => 'local/json2activity:execute',
+        'services'      => [MOODLE_OFFICIAL_MOBILE_SERVICE, 'json2activity'],
+    ],
+];
+
+$services = [
+    'JSON2Activity API' => [
+        'functions' => ['local_json2activity_process'],
+        'restrictedusers' => 0,
+        'enabled' => 1,
+        'shortname' => 'json2activity',
+        'downloadfiles' => 0,
+        'uploadfiles' => 0,
+    ],
+];
