@@ -35,7 +35,7 @@ require_once($GLOBALS['CFG']->dirroot . '/course/lib.php');
 class processor {
 
     /** @var array Supported activity types */
-    protected const SUPPORTED_TYPES = ['label', 'page', 'url'];
+    protected const SUPPORTED_TYPES = ['label', 'page', 'url', 'assign'];
 
     /** @var \stdClass The course object */
     protected $course;
@@ -486,6 +486,24 @@ class processor {
                 $mi->intro = $data['intro'] ?? '';
                 $mi->introformat = FORMAT_HTML;
                 $mi->display = $data['display'] ?? 0;
+                break;
+
+            case 'assign':
+                if (empty($data['name'])) {
+                    throw new \moodle_exception(
+                        get_string('error_missing_field', 'local_json2activity', 'name')
+                    );
+                }
+                $mi->name = $data['name'];
+                $mi->intro = $data['intro'] ?? '';
+                $mi->introformat = FORMAT_HTML;
+                $mi->allowsubmissionsfromdate = $data['allowsubmissionsfromdate'] ?? 0;
+                $mi->duedate = $data['duedate'] ?? 0;
+                $mi->cutoffdate = $data['cutoffdate'] ?? 0;
+                $mi->grade = $data['grade'] ?? 100;
+                $mi->submissiondrafts = $data['submissiondrafts'] ?? 0;
+                $mi->sendnotifications = $data['sendnotifications'] ?? 0;
+                $mi->blindmarking = $data['blindmarking'] ?? 0;
                 break;
 
             default:

@@ -146,6 +146,7 @@ $string['error_invalid_activity_type'] = 'Unsupported activity type: {$a}.';
 $string['error_missing_field'] = 'Missing required field: {$a}.';
 $string['error_invalid_section'] = 'Invalid section number.';
 $string['error_no_capability'] = 'User does not have required capability on this course.';
+$string['error_request_not_found'] = 'Request not found.';
 
 // Activity types.
 $string['activitytype_label'] = 'Label';

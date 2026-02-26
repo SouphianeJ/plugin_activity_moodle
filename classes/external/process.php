@@ -157,12 +157,31 @@ class process extends external_api {
     }
 
     /**
-     * Format successful result.
+     * Map internal processor status to canonical API status.
+     *
+     * @param string $status The internal status string.
+     * @return string The canonical status string.
+     */
+    protected static function map_status(string $status): string {
+        $map = [
+            'partial'           => 'partial_success',
+            'dry_run_validated' => 'success',  // processor sets status='validated' for dry-run success.
+            'dry_run_success'   => 'success',  // defensive alias.
+            'dry_run_partial'   => 'partial_success',
+            'dry_run_failed'    => 'failed',
+        ];
+        return $map[$status] ?? $status;
+    }
+
+    /**
+     * Format successful result using canonical nested response shape.
      *
      * @param array $result The processor result.
      * @return array Formatted result.
      */
     protected static function format_result(array $result): array {
+        global $CFG;
+
         $items = [];
         foreach ($result['items'] as $item) {
             $formatteditem = [
@@ -172,33 +191,37 @@ class process extends external_api {
                 'section' => $item['section'],
                 'cmid' => $item['cmid'] ?? 0,
                 'instanceid' => $item['instanceid'] ?? 0,
-                'error_code' => '',
-                'error_message' => '',
             ];
 
             if (isset($item['error'])) {
-                $formatteditem['error_code'] = $item['error']['code'] ?? '';
-                $formatteditem['error_message'] = $item['error']['message'] ?? '';
+                $formatteditem['error'] = [
+                    'code' => $item['error']['code'] ?? '',
+                    'message' => $item['error']['message'] ?? '',
+                ];
             }
 
             $items[] = $formatteditem;
         }
 
+        $requestid = $result['request_id'];
+
         return [
-            'request_id' => $result['request_id'],
+            'request_id' => $requestid,
             'courseid' => $result['courseid'],
-            'status' => $result['status'],
+            'status' => self::map_status($result['status']),
             'created_count' => $result['created_count'],
             'failed_count' => $result['failed_count'],
             'items' => $items,
-            'moodle_request_log_id' => $result['debug']['moodle_request_log_id'] ?? 0,
-            'error_code' => '',
-            'error_message' => '',
+            'debug' => [
+                'moodle_request_log_id' => $result['debug']['moodle_request_log_id'] ?? 0,
+                'request_debug_url' => $CFG->wwwroot . '/local/json2activity/logs.php?requestid='
+                    . urlencode($requestid),
+            ],
         ];
     }
 
     /**
-     * Format error result.
+     * Format error result using canonical nested response shape.
      *
      * @param string $requestid The request ID.
      * @param string $code The error code.
@@ -206,6 +229,8 @@ class process extends external_api {
      * @return array Formatted error result.
      */
     protected static function format_error(string $requestid, string $code, string $message): array {
+        global $CFG;
+
         return [
             'request_id' => $requestid,
             'courseid' => 0,
@@ -213,9 +238,15 @@ class process extends external_api {
             'created_count' => 0,
             'failed_count' => 0,
             'items' => [],
-            'moodle_request_log_id' => 0,
-            'error_code' => $code,
-            'error_message' => $message,
+            'debug' => [
+                'moodle_request_log_id' => 0,
+                'request_debug_url' => $CFG->wwwroot . '/local/json2activity/logs.php?requestid='
+                    . urlencode($requestid),
+            ],
+            'error' => [
+                'code' => $code,
+                'message' => $message,
+            ],
         ];
     }
 
@@ -241,24 +272,31 @@ class process extends external_api {
         return new external_single_structure([
             'request_id' => new external_value(PARAM_RAW, 'Request ID'),
             'courseid' => new external_value(PARAM_INT, 'Course ID'),
-            'status' => new external_value(PARAM_ALPHA, 'Overall status'),
+            'status' => new external_value(PARAM_ALPHANUMEXT, 'Overall status'),
             'created_count' => new external_value(PARAM_INT, 'Number of items created'),
             'failed_count' => new external_value(PARAM_INT, 'Number of items failed'),
             'items' => new external_multiple_structure(
                 new external_single_structure([
                     'item_id' => new external_value(PARAM_RAW, 'Item ID'),
-                    'status' => new external_value(PARAM_ALPHA, 'Item status'),
+                    'status' => new external_value(PARAM_ALPHANUMEXT, 'Item status'),
                     'type' => new external_value(PARAM_ALPHANUMEXT, 'Activity type'),
                     'section' => new external_value(PARAM_INT, 'Section number'),
                     'cmid' => new external_value(PARAM_INT, 'Course module ID'),
                     'instanceid' => new external_value(PARAM_INT, 'Instance ID'),
-                    'error_code' => new external_value(PARAM_RAW, 'Error code if failed'),
-                    'error_message' => new external_value(PARAM_RAW, 'Error message if failed'),
+                    'error' => new external_single_structure([
+                        'code' => new external_value(PARAM_RAW, 'Error code'),
+                        'message' => new external_value(PARAM_RAW, 'Error message'),
+                    ], 'Error details', VALUE_OPTIONAL),
                 ])
             ),
-            'moodle_request_log_id' => new external_value(PARAM_INT, 'Moodle request log ID'),
-            'error_code' => new external_value(PARAM_RAW, 'Error code if request failed'),
-            'error_message' => new external_value(PARAM_RAW, 'Error message if request failed'),
+            'debug' => new external_single_structure([
+                'moodle_request_log_id' => new external_value(PARAM_INT, 'Moodle request log ID'),
+                'request_debug_url' => new external_value(PARAM_RAW, 'URL for debug log view'),
+            ]),
+            'error' => new external_single_structure([
+                'code' => new external_value(PARAM_RAW, 'Error code'),
+                'message' => new external_value(PARAM_RAW, 'Error message'),
+            ], 'Error details', VALUE_OPTIONAL),
         ]);
     }
 }
