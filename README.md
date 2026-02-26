@@ -4,12 +4,13 @@ A Moodle local plugin that allows creating activities from JSON payloads, either
 
 ## Features
 
-- **Multi-activity support**: Create Labels, Pages, and URLs (extensible to other activity types)
+- **Multi-activity support**: Create Labels, Pages, URLs, and Assignments (extensible to other activity types)
 - **Web form interface**: Import JSON directly in Moodle's UI
 - **REST API**: Secure web service endpoint for external applications
 - **Security**: HMAC signature verification, IP allowlist, anti-replay protection
 - **Traceability**: Full logging of requests and items for debugging
 - **Idempotence**: Request ID-based deduplication
+- **Status endpoint**: Query the status of any previously submitted request
 
 ## Installation
 
@@ -97,6 +98,52 @@ A Moodle local plugin that allows creating activities from JSON payloads, either
 }
 ```
 
+### Assignment
+```json
+{
+  "type": "assign",
+  "data": {
+    "name": "Homework 1",
+    "intro": "<p>Submit your work here.</p>",
+    "duedate": 0,
+    "cutoffdate": 0,
+    "grade": 100
+  }
+}
+```
+
+## API Response Shape
+
+All WS endpoints return the same canonical nested structure:
+
+```json
+{
+  "request_id": "uuid",
+  "courseid": 123,
+  "status": "success|partial_success|failed|queued|processing|replayed|rejected",
+  "created_count": 2,
+  "failed_count": 1,
+  "items": [
+    {
+      "item_id": "i1",
+      "status": "created|failed|validated|queued|skipped",
+      "type": "label",
+      "section": 0,
+      "cmid": 12,
+      "instanceid": 34,
+      "error": { "code": "VALIDATION_ERROR", "message": "..." }
+    }
+  ],
+  "debug": {
+    "moodle_request_log_id": 1122,
+    "request_debug_url": "https://.../local/json2activity/logs.php?requestid=uuid"
+  },
+  "error": { "code": "REPLAY_REJECTED", "message": "..." }
+}
+```
+
+`error` (top-level) and `error` (item-level) are only present when there is an error.
+
 ## API Security
 
 ### Headers
@@ -116,11 +163,11 @@ signature = base64(hmac_sha256(client_secret, canonical_string))
 
 ## Web Service
 
-### Endpoint
+### Process endpoint
 
 `POST /webservice/rest/server.php?wsfunction=local_json2activity_process`
 
-### Parameters
+#### Parameters
 
 - `wstoken`: Moodle web service token
 - `moodlewsrestformat`: json
@@ -130,6 +177,17 @@ signature = base64(hmac_sha256(client_secret, canonical_string))
 - `timestamp`: Epoch seconds
 - `nonce`: Nonce (optional)
 - `signature`: HMAC signature
+
+### Status endpoint
+
+`GET /webservice/rest/server.php?wsfunction=local_json2activity_get_status`
+
+#### Parameters
+
+- `wstoken`: Moodle web service token
+- `moodlewsrestformat`: json
+- `requestid`: Request UUID to look up
+- `courseid`: Course ID (optional, for ownership validation)
 
 ## Configuration
 

@@ -34,11 +34,20 @@ $functions = [
         'capabilities'  => 'local/json2activity:execute',
         'services'      => [MOODLE_OFFICIAL_MOBILE_SERVICE, 'json2activity'],
     ],
+    'local_json2activity_get_status' => [
+        'classname'     => 'local_json2activity\external\get_status',
+        'methodname'    => 'execute',
+        'description'   => 'Retrieve the status and items of a previously submitted JSON2Activity request.',
+        'type'          => 'read',
+        'ajax'          => false,
+        'capabilities'  => 'local/json2activity:execute',
+        'services'      => ['json2activity'],
+    ],
 ];
 
 $services = [
     'JSON2Activity API' => [
-        'functions' => ['local_json2activity_process'],
+        'functions' => ['local_json2activity_process', 'local_json2activity_get_status'],
         'restrictedusers' => 0,
         'enabled' => 1,
         'shortname' => 'json2activity',
